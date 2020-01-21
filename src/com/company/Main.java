@@ -17,41 +17,46 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.company.ExtrinsicFromMeasured.extrinsicFromMeasured;
+
 
 public class Main {
 
-    public static final String CAL_IMAGE_PATH = "./res/calibration/";
-    public static final String CAL_IMAGE_OUTPUT_PATH = "./res/calibration_output/";
-    public static final String CAL_IMAGE_NAME = "cali_";
-    public static final String CAL_IMAGE_FORMAT = ".JPG";
-    public static final int CAL_IMAGE_NUMBER = 25;
+    public static final String CAL_IMAGE_PATH = "./res/calibration/";                   // the input folder of the images
+    public static final String CAL_IMAGE_OUTPUT_PATH = "./res/calibration_output/";     // the output folder for the Calibration-Class
+    public static final String CAL_IMAGE_NAME = "cali_";                                // name of the images (complete name has to be in default case: cali_x.jpg)
+    public static final String CAL_IMAGE_FORMAT = ".JPG";                               // format of the images (input + output)
+    public static final int CAL_IMAGE_NUMBER = 25;                                      // number of images
     // for saving images:
-    public static final String CORNERS_SUFFIX = "_with_corners";
-    public static final String UNDISTORTED_SUFFIX = "_undistorted";
+    public static final String CORNERS_SUFFIX = "_with_corners";                        // suffix for images with drawn chessboard
+    public static final String UNDISTORTED_SUFFIX = "_undistorted";                     // suffix for images that are undistorted
 
-    public static final String RECT_IMAGE_OUTPUT_PATH = "./res/rectification_output/";
-    public static final String RECT_IMAGE_SUFFIX = "_rectified";
-    public static final String EPIPOLAR_IMAGE_SUFFIX = "_epipolarlines";
+    public static final String RECT_IMAGE_OUTPUT_PATH = "./res/rectification_output/";  // the output folder for the Epipolar and Rectification-Class
+    public static final String RECT_IMAGE_SUFFIX = "_rectified";                        // suffix rectified images
+    public static final String EPIPOLAR_IMAGE_SUFFIX = "_epipolarlines";                // suffix images with epipolarlines
 
-    public static final String OPEN_CV_SUFFIX = "OPENCV";
+    public static final String OPEN_CV_SUFFIX = "OPENCV";                               // suffix for OpenCV rectify method
 
-    public static final boolean useUndistorted = false;
+    public static final boolean useUndistorted = true;
 
     public static void main(String[] args) {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME); //opencv_java411
 
-
+        //Mat intrinsicForBonus = new Mat();
         try{
             // Loading images from folder:
             List<Mat> allImages = loadImages();
 
-            int index1 = 2;
-            int index2 = 19;
+            // ############# change those two, to output another image pair #################
+            int index1 = 4;
+            int index2 = 14;
 
             // Calibrate Camera for all image and calc projection-matrices for images with index1 and incex2
             CalibrationResult calibrationResult = Calibration.calibrate(allImages, index1, index2);
+            //intrinsicForBonus = calibrationResult.intrinsic;
 
             if (!useUndistorted) {
+                // ################################### Rectification with distorted Images ###########################
                 // Output images with Epipolarlines:
                 Epipolar.outputImagesWithEpipolarLines(
                         allImages.get(index1),
@@ -79,6 +84,7 @@ public class Main {
                         rectified.rectifiedImagePoints2,
                         EPIPOLAR_IMAGE_SUFFIX + RECT_IMAGE_SUFFIX);
             }else {
+                //########################## Rectification with undistorted images / imagepoints ###########################
                 //  Output undistorted images with Epipolarlines:
                 Epipolar.outputImagesWithEpipolarLines(
                         calibrationResult.undistortedImage1,
@@ -107,6 +113,7 @@ public class Main {
                         EPIPOLAR_IMAGE_SUFFIX + RECT_IMAGE_SUFFIX);
             }
 
+            // ########################### Rectification with OpenCV Method #################################
             // Rectify with OpenCV method:
             RectificationResult rectifiedOpenCV = Rectification.rectifyWithOpenCVMethod(
                     allImages.get(index1),
@@ -127,6 +134,12 @@ public class Main {
         } catch (FileNotFoundException | ImageBadForCalibrationException | WritingImageException e){
             e.printStackTrace();
         }
+
+
+
+        // ####################### Bonus: trying out a rectification with measured extrinsic #####################
+        // Doesn't work yet: extrinsicFromMeasured(intrinsicForBonus);
+
     }
 
     private static List<Mat> loadImages() throws FileNotFoundException{
@@ -135,7 +148,7 @@ public class Main {
             String currImageName = CAL_IMAGE_NAME + i + CAL_IMAGE_FORMAT;
 
             // Load image
-            Mat image = Imgcodecs.imread(CAL_IMAGE_PATH + currImageName);       //".res/cali_test/cali_test_1.JPG");
+            Mat image = Imgcodecs.imread(CAL_IMAGE_PATH + currImageName);
             if (image.empty()) {
                 System.out.println(currImageName + " Error: File empty.");
                 throw new FileNotFoundException(CAL_IMAGE_PATH + currImageName);
@@ -149,8 +162,6 @@ public class Main {
 
 
     //Similar to android Implementation? https://github.com/opencv/opencv/blob/master/samples/android/camera-calibration/src/org/opencv/samples/cameracalibration/CameraCalibrator.java
-
-
     //Codeexample 3 https://www.programcreek.com/java-api-examples/?class=org.opencv.calib3d.Calib3d&method=calibrateCamera
     /*public void calibrate() {
         ArrayList<Mat> rvecs = new ArrayList<Mat>();
@@ -195,8 +206,8 @@ public class Main {
     // Tutorial from openCV
    /* public static void calibration(){
         Size boardSize = new Size();
-        boardSize.height = 9; //todo look at example xml config
-        boardSize.width = 6; //todo look at example xml config
+        boardSize.height = 9;
+        boardSize.width = 6;
         Size imageSize;
 
         for(int i = 0; i < CAL_IMAGE_NUMBER; i++) {
@@ -209,7 +220,6 @@ public class Main {
             {
                 // if calibration threshold was not reached yet, calibrate now
                 if (!imagePoints.empty())
-                    // TODO Implement
                     runCalibrationAndSave(s, imageSize, cameraMatrix, distCoeffs, imagePoints, grid_width,
                             release_object);
                 break;
@@ -236,6 +246,7 @@ public class Main {
     }*/
 
 
+   // source skript, Prof. Siebert
     public static void showImage(Mat mtrx, String imageTitle) {
         MatOfByte matOfByte = new MatOfByte();  // subclass of org.opencv.core.Mat
         Imgcodecs.imencode(".png", mtrx, matOfByte);

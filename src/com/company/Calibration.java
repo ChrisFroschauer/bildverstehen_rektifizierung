@@ -122,9 +122,9 @@ public class Calibration {
         Calib3d.undistort(images.get(indexSecond), undistortedImage2, intrinsic, distCoeffs);
         MatOfPoint2f undistortedPoints1 = new MatOfPoint2f();
         MatOfPoint2f undistortedPoints2 = new MatOfPoint2f();
-        Calib3d.undistortPoints(imagePoints.get(indexFirst), undistortedPoints1, intrinsic, distCoeffs);
-        Calib3d.undistortPoints(imagePoints.get(indexSecond), undistortedPoints2, intrinsic, distCoeffs);
-        // TODO: Undistorted Points are super small
+        Calib3d.undistortPoints(imagePoints.get(indexFirst), undistortedPoints1, intrinsic, distCoeffs, new Mat(), intrinsic);
+        Calib3d.undistortPoints(imagePoints.get(indexSecond), undistortedPoints2, intrinsic, distCoeffs, new Mat(), intrinsic);
+
         //System.out.println("Undistorted Points1: \n" + undistortedPoints1.dump());
         //System.out.println("Undistorted Points2: \n" + undistortedPoints2.dump());
         //System.out.println("Distorted Points1: \n" + imagePoints.get(indexFirst).dump());

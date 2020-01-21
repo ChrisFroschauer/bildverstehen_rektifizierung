@@ -268,24 +268,24 @@ public class Rectification {
         return new RectificationResult(rectifiedImage1, rectifiedImage2, imagePointsTransformed1, imagePointsTransformed2);
     }
 
+
     /*
-    public static RectificationResult rectifyWithOpenCVMethod2(Mat image1, Mat image2, int index1, int index2, Mat PPM1, Mat PPM2, Mat distCoeffs, MatOfPoint2f imagePoints1, MatOfPoint2f imagePoints2) throws WritingImageException{
+    public static RectificationResult rectifyWithOpenCVMethod2(Mat image1, Mat image2, int index1, int index2, Mat intrinsic, Mat R, Mat t, Mat distCoeffs, MatOfPoint2f imagePoints1, MatOfPoint2f imagePoints2) throws WritingImageException{
         if (imagePoints1.toList().size() < MIN_NUMBER_POINTS || imagePoints2.toList().size() < MIN_NUMBER_POINTS){
             throw new IllegalArgumentException("At least 8 points in imagePoints1 and imagePoints2");
         }
 
-        Calib3d.stereoRectify(PPM1, distCoeffs, PPM2, distCoeffs, image1.size(), R, t, T1, T2, Pn1, Pn2, Q, 0, -1, new Size(2400, 1600), null, null);
-
-        // Rectify:
+        // return values:
         Mat T1 = new Mat();
         Mat T2 = new Mat();
-        Calib3d.stereoRectifyUncalibrated(
-                new MatOfPoint2f(imagePoints1.submat(0,8, 0,1)),
-                new MatOfPoint2f(imagePoints2.submat(0,8, 0,1)),
-                F, image1.size(), T1, T2);
+        Mat Pn1 = new Mat();
+        Mat Pn2 = new Mat();
+        Mat Q = new Mat();
+        // Rectify:
+        Calib3d.stereoRectify(intrinsic, distCoeffs, intrinsic, distCoeffs, image1.size(), R, t, T1, T2, Pn1, Pn2, Q, 0, -1, new Size(2400, 1600), null, null);
 
-        System.out.println("OpenCV Method T1: \n" + T1.dump());
-        System.out.println("OpenCV Method T2: \n" + T2.dump());
+        System.out.println("OpenCV Method2 T1: \n" + T1.dump());
+        System.out.println("OpenCV Method2 T2: \n" + T2.dump());
 
         // Transform the image pair:
         Mat rectifiedImage1 = new Mat();
@@ -308,7 +308,7 @@ public class Rectification {
         boolean ok = Imgcodecs.imwrite(fileImage1, rectifiedImage1);
         ok &= Imgcodecs.imwrite(fileImage2, rectifiedImage2);
         if (!ok) {
-            throw new WritingImageException("Error: while writing files. (rectified)");
+            throw new WritingImageException("Error: while writing files. (rectified openCV method2)");
         }
 
         return new RectificationResult(rectifiedImage1, rectifiedImage2, imagePointsTransformed1, imagePointsTransformed2);
